@@ -9,25 +9,25 @@ export default function ChatInput() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Zustand 스토어에서 필요한 함수들 가져오기
-  const { sendMessage, isLoading } = useChatStore();
+  const { sendMessage, isLoading, stopStreaming } = useChatStore();
 
   // 메시지 전송 핸들러
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isSubmitting) return;
 
+    const messageToSend = inputValue;
+
+    // 즉시 입력창 초기화 및 높이 리셋
+    setInputValue('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+
     try {
       setIsSubmitting(true);
 
       // 스토어의 sendMessage 함수 호출
-      await sendMessage(inputValue);
-
-      // 입력창 초기화
-      setInputValue('');
-
-      // 텍스트 영역 높이 리셋
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-      }
+      await sendMessage(messageToSend);
     } catch (error) {
       console.error('메시지 전송 중 오류:', error);
     } finally {
@@ -35,11 +35,19 @@ export default function ChatInput() {
     }
   };
 
+  // 응답 정지 핸들러
+  const handleStopStreaming = () => {
+    stopStreaming();
+  };
+
   // Enter 키 처리 (Shift+Enter는 줄바꿈, Enter는 전송)
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      // 로딩 중이거나 입력이 없으면 전송하지 않음
+      if (!isLoading && inputValue.trim()) {
+        handleSendMessage();
+      }
     }
   };
 
@@ -71,20 +79,24 @@ export default function ChatInput() {
               minHeight: '56px',
               maxHeight: '200px',
             }}
-            disabled={isSubmitting}
+            disabled={false} // 항상 입력 가능
             rows={1}
           />
 
           {/* 하단 영역 - 버튼 */}
           <div className="flex items-center justify-end px-4 pb-3">
-            {/* 전송 버튼 */}
+            {/* 전송/정지 버튼 */}
             <button
-              onClick={handleSendMessage}
-              disabled={!inputValue.trim() || isSubmitting || isLoading}
-              className="w-8 h-8 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center group"
-              title={isSubmitting ? '전송 중...' : '전송 (Enter)'}
+              onClick={isLoading ? handleStopStreaming : handleSendMessage}
+              disabled={!isLoading && !inputValue.trim()}
+              className={`w-8 h-8 text-white rounded-lg font-medium transition-colors flex items-center justify-center group ${
+                isLoading
+                  ? 'bg-red-500 hover:bg-red-600'
+                  : 'bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed'
+              }`}
+              title={isLoading ? '응답 정지' : '전송 (Enter)'}
             >
-              {isSubmitting ? (
+              {isLoading ? (
                 <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
                 <span className="text-sm transform group-hover:scale-110 transition-transform">

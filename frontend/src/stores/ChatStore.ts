@@ -5,6 +5,7 @@ import type { ChatMessage } from '@/types/types';
 type ChatStore = {
   messages: ChatMessage[];
   isLoading: boolean;
+  abortController: AbortController | null; // 요청 취소를 위한 컨트롤러
 
   // 메시지 추가
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
@@ -15,6 +16,9 @@ type ChatStore = {
   // 스트리밍 완료 처리
   completeStreaming: () => void;
 
+  // 스트리밍 정지
+  stopStreaming: () => void;
+
   // 로딩 상태 설정
   setLoading: (loading: boolean) => void;
 
@@ -24,7 +28,7 @@ type ChatStore = {
   // 메시지를 API 형식으로 변환 (시스템 메시지 제외)
   getApiMessages: () => Array<{ role: string; content: string }>;
 
-  // 메시지 전송 함수 (새로 추가)
+  // 메시지 전송 함수
   sendMessage: (message: string) => Promise<void>;
 };
 
@@ -36,6 +40,7 @@ const generateId = () =>
 export const useChatStore = create<ChatStore>((set, get) => ({
   messages: [],
   isLoading: false,
+  abortController: null,
 
   // 새 메시지 추가
   addMessage: (message) =>
@@ -65,7 +70,22 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     set((state) => ({
       messages: state.messages.map((msg) => ({ ...msg, isStreaming: false })),
       isLoading: false,
+      abortController: null,
     })),
+
+  // 스트리밍 정지
+  stopStreaming: () => {
+    const { abortController } = get();
+    if (abortController) {
+      abortController.abort();
+    }
+
+    set((state) => ({
+      messages: state.messages.map((msg) => ({ ...msg, isStreaming: false })),
+      isLoading: false,
+      abortController: null,
+    }));
+  },
 
   // 로딩 상태 설정
   setLoading: (loading) => set({ isLoading: loading }),
@@ -86,8 +106,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     const trimmedMessage = message.trim();
     if (!trimmedMessage) return;
 
+    // 새로운 AbortController 생성
+    const controller = new AbortController();
+
     try {
-      set({ isLoading: true });
+      set({ isLoading: true, abortController: controller });
 
       // 사용자 메시지 추가
       get().addMessage({
@@ -115,6 +138,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         body: JSON.stringify({
           messages: apiMessages,
         }),
+        signal: controller.signal, // 요청 취소를 위한 signal 추가
       });
 
       if (!response.ok) {
@@ -128,6 +152,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
       if (reader) {
         while (true) {
+          // 요청이 취소되었는지 확인
+          if (controller.signal.aborted) {
+            await reader.cancel();
+            break;
+          }
+
           const { done, value } = await reader.read();
 
           if (done) break;
@@ -142,6 +172,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
                 const data = JSON.parse(line.slice(6));
 
                 if (data.status === 'processing' && data.data) {
+                  // 요청이 취소되었는지 다시 확인
+                  if (controller.signal.aborted) {
+                    break;
+                  }
+
                   // 스트리밍 중인 내용 누적
                   accumulatedContent += data.data;
                   get().updateStreamingMessage(accumulatedContent);
@@ -152,24 +187,36 @@ export const useChatStore = create<ChatStore>((set, get) => ({
                   throw new Error(data.data);
                 }
               } catch (parseError) {
-                console.warn('JSON 파싱 오류:', parseError);
+                if (!controller.signal.aborted) {
+                  console.warn('JSON 파싱 오류:', parseError);
+                }
               }
             }
+          }
+
+          // 취소되었으면 반복문 종료
+          if (controller.signal.aborted) {
+            break;
           }
         }
       }
     } catch (error) {
-      console.error('메시지 전송 오류:', error);
+      // AbortError는 정상적인 취소이므로 에러 메시지를 표시하지 않음
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('요청이 취소되었습니다.');
+      } else {
+        console.error('메시지 전송 오류:', error);
 
-      // 오류 메시지 추가
-      get().addMessage({
-        role: 'assistant',
-        content: `죄송합니다. 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,
-      });
+        // 오류 메시지 추가
+        get().addMessage({
+          role: 'assistant',
+          content: `죄송합니다. 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,
+        });
+      }
 
       get().completeStreaming();
     } finally {
-      set({ isLoading: false });
+      set({ isLoading: false, abortController: null });
     }
   },
 }));
