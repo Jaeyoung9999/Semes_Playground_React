@@ -9,29 +9,17 @@ export default function ChatInput() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Zustand 스토어에서 필요한 함수들 가져오기
-  const {
-    addMessage,
-    updateStreamingMessage,
-    completeStreaming,
-    setLoading,
-    getApiMessages,
-    isLoading,
-  } = useChatStore();
+  const { sendMessage, isLoading } = useChatStore();
 
-  // 메시지 전송 함수
-  const sendMessage = async () => {
-    const message = inputValue.trim();
-    if (!message || isSubmitting) return;
+  // 메시지 전송 핸들러
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isSubmitting) return;
 
     try {
       setIsSubmitting(true);
-      setLoading(true);
 
-      // 사용자 메시지 추가
-      addMessage({
-        role: 'user',
-        content: message,
-      });
+      // 스토어의 sendMessage 함수 호출
+      await sendMessage(inputValue);
 
       // 입력창 초기화
       setInputValue('');
@@ -40,83 +28,10 @@ export default function ChatInput() {
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
       }
-
-      // API 호출을 위한 메시지 배열 생성
-      const apiMessages = getApiMessages();
-      apiMessages.push({ role: 'user', content: message });
-
-      // 빈 AI 응답 메시지 미리 추가 (스트리밍용)
-      addMessage({
-        role: 'assistant',
-        content: '',
-        isStreaming: true,
-      });
-
-      // 백엔드 API 호출 (스트리밍 방식)
-      const response = await fetch('http://localhost:8000/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: apiMessages,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // 스트리밍 응답 처리
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let accumulatedContent = '';
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-
-          if (done) break;
-
-          // 스트리밍 데이터 디코딩
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
-
-                if (data.status === 'processing' && data.data) {
-                  // 스트리밍 중인 내용 누적
-                  accumulatedContent += data.data;
-                  updateStreamingMessage(accumulatedContent);
-                } else if (data.status === 'complete') {
-                  // 스트리밍 완료
-                  completeStreaming();
-                } else if (data.status === 'error') {
-                  throw new Error(data.data);
-                }
-              } catch (parseError) {
-                console.warn('JSON 파싱 오류:', parseError);
-              }
-            }
-          }
-        }
-      }
     } catch (error) {
-      console.error('메시지 전송 오류:', error);
-
-      // 오류 메시지 추가
-      addMessage({
-        role: 'assistant',
-        content: `죄송합니다. 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,
-      });
-
-      completeStreaming();
+      console.error('메시지 전송 중 오류:', error);
     } finally {
       setIsSubmitting(false);
-      setLoading(false);
     }
   };
 
@@ -124,7 +39,7 @@ export default function ChatInput() {
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      handleSendMessage();
     }
   };
 
@@ -167,7 +82,7 @@ export default function ChatInput() {
 
           {/* 전송 버튼 */}
           <button
-            onClick={sendMessage}
+            onClick={handleSendMessage}
             disabled={!inputValue.trim() || isSubmitting || isLoading}
             className="px-6 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >

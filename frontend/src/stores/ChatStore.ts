@@ -23,6 +23,9 @@ type ChatStore = {
 
   // 메시지를 API 형식으로 변환 (시스템 메시지 제외)
   getApiMessages: () => Array<{ role: string; content: string }>;
+
+  // 메시지 전송 함수 (새로 추가)
+  sendMessage: (message: string) => Promise<void>;
 };
 
 // 고유 ID 생성 함수
@@ -76,5 +79,97 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     return messages
       .filter((msg) => !msg.isStreaming) // 스트리밍 중인 메시지 제외
       .map((msg) => ({ role: msg.role, content: msg.content }));
+  },
+
+  // 메시지 전송 함수
+  sendMessage: async (message: string) => {
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage) return;
+
+    try {
+      set({ isLoading: true });
+
+      // 사용자 메시지 추가
+      get().addMessage({
+        role: 'user',
+        content: trimmedMessage,
+      });
+
+      // API 호출을 위한 메시지 배열 생성
+      const apiMessages = get().getApiMessages();
+      apiMessages.push({ role: 'user', content: trimmedMessage });
+
+      // 빈 AI 응답 메시지 미리 추가 (스트리밍용)
+      get().addMessage({
+        role: 'assistant',
+        content: '',
+        isStreaming: true,
+      });
+
+      // 백엔드 API 호출 (스트리밍 방식)
+      const response = await fetch('http://localhost:8000/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: apiMessages,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // 스트리밍 응답 처리
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedContent = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) break;
+
+          // 스트리밍 데이터 디코딩
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+
+                if (data.status === 'processing' && data.data) {
+                  // 스트리밍 중인 내용 누적
+                  accumulatedContent += data.data;
+                  get().updateStreamingMessage(accumulatedContent);
+                } else if (data.status === 'complete') {
+                  // 스트리밍 완료
+                  get().completeStreaming();
+                } else if (data.status === 'error') {
+                  throw new Error(data.data);
+                }
+              } catch (parseError) {
+                console.warn('JSON 파싱 오류:', parseError);
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('메시지 전송 오류:', error);
+
+      // 오류 메시지 추가
+      get().addMessage({
+        role: 'assistant',
+        content: `죄송합니다. 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,
+      });
+
+      get().completeStreaming();
+    } finally {
+      set({ isLoading: false });
+    }
   },
 }));
