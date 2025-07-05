@@ -55,58 +55,45 @@ export default function ChatInput() {
   };
 
   return (
-    <div className="border-t bg-white p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-end gap-3">
+    <div className="bg-white pb-4">
+      <div className="max-w-4xl mx-auto px-4">
+        {/* 입력 컨테이너 - shadow와 border로 입체감 추가 */}
+        <div className="bg-white border border-gray-200 rounded-xl shadow-lg shadow-gray-200/50 hover:shadow-xl hover:shadow-gray-200/60 transition-shadow duration-200">
           {/* 메시지 입력 영역 */}
-          <div className="flex-1 relative">
-            <textarea
-              ref={textareaRef}
-              value={inputValue}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder="메시지를 입력하세요... (Enter: 전송, Shift+Enter: 줄바꿈)"
-              className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              style={{ minHeight: '56px' }}
-              disabled={isSubmitting}
-              rows={1}
-            />
+          <textarea
+            ref={textareaRef}
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder="메시지를 입력하세요... (Enter: 전송, Shift+Enter: 줄바꿈)"
+            className="w-full p-4 bg-transparent resize-none focus:outline-none rounded-t-xl overflow-y-auto"
+            style={{
+              minHeight: '56px',
+              maxHeight: '200px',
+            }}
+            disabled={isSubmitting}
+            rows={1}
+          />
 
-            {/* 입력 힌트 */}
-            {inputValue.length === 0 && (
-              <div className="absolute bottom-2 right-2 text-xs text-gray-400">
-                Shift+Enter로 줄바꿈
-              </div>
-            )}
+          {/* 하단 영역 - 버튼 */}
+          <div className="flex items-center justify-end px-4 pb-3">
+            {/* 전송 버튼 */}
+            <button
+              onClick={handleSendMessage}
+              disabled={!inputValue.trim() || isSubmitting || isLoading}
+              className="w-8 h-8 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center group"
+              title={isSubmitting ? '전송 중...' : '전송 (Enter)'}
+            >
+              {isSubmitting ? (
+                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <span className="text-sm transform group-hover:scale-110 transition-transform">
+                  ↵
+                </span>
+              )}
+            </button>
           </div>
-
-          {/* 전송 버튼 */}
-          <button
-            onClick={handleSendMessage}
-            disabled={!inputValue.trim() || isSubmitting || isLoading}
-            className="px-6 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                전송 중...
-              </>
-            ) : (
-              <>
-                <span>전송</span>
-                <span className="text-sm">↵</span>
-              </>
-            )}
-          </button>
         </div>
-
-        {/* 상태 표시 */}
-        {isLoading && (
-          <div className="mt-2 text-sm text-gray-500 flex items-center gap-2">
-            <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-            AI가 응답을 생성하고 있습니다...
-          </div>
-        )}
       </div>
     </div>
   );

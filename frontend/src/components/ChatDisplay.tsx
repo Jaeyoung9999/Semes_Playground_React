@@ -19,7 +19,7 @@ export default function ChatDisplay() {
   }
 
   return (
-    <div className="w-[80%] p-4 space-y-4">
+    <div className="p-4 space-y-4">
       {/* 채팅 메시지 목록 */}
       {messages.map((message) => (
         <div

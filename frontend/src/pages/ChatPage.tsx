@@ -66,36 +66,40 @@ export default function ChatPage() {
       </header>
 
       {/* 채팅 표시 영역 */}
-      <main className="flex-1 flex justify-center">
-        <ChatDisplay />
+      <main className="flex-1">
+        <div className="w-[60%] mx-auto max-w-4xl">
+          <ChatDisplay />
+        </div>
       </main>
 
       {/* 메시지 입력 영역 */}
-      <footer className="sticky bottom-0 bg-white border-t z-20 relative">
-        {/* 자동 스크롤이 비활성화되었을 때 표시할 버튼 */}
-        {!shouldAutoScroll && (
-          <div className="absolute -top-16 left-1/2 transform -translate-x-1/2">
-            <button
-              onClick={scrollToBottom}
-              className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-4 py-2 shadow-lg transition-colors flex items-center gap-2"
-              title="최신 메시지로 이동"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+      <footer className="sticky bottom-0 bg-white z-20">
+        <div className="w-[60%] mx-auto max-w-4xl relative">
+          {/* 자동 스크롤이 비활성화되었을 때 표시할 버튼 */}
+          {!shouldAutoScroll && (
+            <div className="absolute -top-16 left-1/2 transform -translate-x-1/2">
+              <button
+                onClick={scrollToBottom}
+                className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-4 py-2 shadow-lg transition-colors flex items-center gap-2"
+                title="최신 메시지로 이동"
               >
-                <path d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-              <span className="text-sm font-medium">최신 메시지</span>
-            </button>
-          </div>
-        )}
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+                <span className="text-sm font-medium">최신 메시지</span>
+              </button>
+            </div>
+          )}
 
-        <ChatInput />
+          <ChatInput />
+        </div>
       </footer>
 
       {/* 스크롤을 맨 아래로 이동시키기 위한 참조 요소 */}

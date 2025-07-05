@@ -55,7 +55,7 @@ async def chat(request: Request) -> StreamingResponse:
                 if content:
                     data = json.dumps({"status": "processing", "data": content}, ensure_ascii=False)
                     yield f"data: {data}\n\n"
-                    await asyncio.sleep(0.01)
+                    await asyncio.sleep(0.03)
             
             if not await request.is_disconnected():
                 yield f"data: {json.dumps({'status': 'complete', 'data': 'Stream finished'}, ensure_ascii=False)}\n\n"
