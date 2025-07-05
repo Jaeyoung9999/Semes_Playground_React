@@ -29,6 +29,7 @@ type ChatStore = {
   loadSession: (sessionId: string) => void;
   saveCurrentSession: () => void;
   deleteSession: (sessionId: string) => void;
+  renameSession: (sessionId: string, newTitle: string) => void; // 새로 추가
   generateSessionTitle: (sessionId: string) => Promise<void>;
   loadChatHistory: () => void;
   saveChatHistory: () => void;
@@ -297,6 +298,28 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       }),
     }));
 
+    get().saveChatHistory();
+  },
+
+  // 세션 이름 변경 (새로 추가)
+  renameSession: (sessionId: string, newTitle: string) => {
+    const { chatHistory } = get();
+    const trimmedTitle = newTitle.trim();
+
+    if (!trimmedTitle) return;
+
+    const updatedHistory = chatHistory.map((session) => {
+      if (session.id === sessionId) {
+        return {
+          ...session,
+          title: trimmedTitle,
+          updatedAt: Date.now(),
+        };
+      }
+      return session;
+    });
+
+    set({ chatHistory: updatedHistory });
     get().saveChatHistory();
   },
 
