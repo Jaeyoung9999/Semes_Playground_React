@@ -6,6 +6,7 @@ type ChatStore = {
   messages: ChatMessage[];
   isLoading: boolean;
   abortController: AbortController | null; // 요청 취소를 위한 컨트롤러
+  selectedModel: string; // 선택된 모델
 
   // 메시지 추가
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
@@ -21,6 +22,9 @@ type ChatStore = {
 
   // 로딩 상태 설정
   setLoading: (loading: boolean) => void;
+
+  // 모델 선택
+  setSelectedModel: (model: string) => void;
 
   // 채팅 내역 초기화
   clearMessages: () => void;
@@ -41,6 +45,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   messages: [],
   isLoading: false,
   abortController: null,
+  selectedModel: 'gpt-3.5-turbo', // 기본값
 
   // 새 메시지 추가
   addMessage: (message) =>
@@ -90,6 +95,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   // 로딩 상태 설정
   setLoading: (loading) => set({ isLoading: loading }),
 
+  // 모델 선택
+  setSelectedModel: (model) => set({ selectedModel: model }),
+
   // 모든 메시지 삭제
   clearMessages: () => set({ messages: [] }),
 
@@ -122,6 +130,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const apiMessages = get().getApiMessages();
       apiMessages.push({ role: 'user', content: trimmedMessage });
 
+      // 선택된 모델 가져오기
+      const { selectedModel } = get();
+
       // 빈 AI 응답 메시지 미리 추가 (스트리밍용)
       get().addMessage({
         role: 'assistant',
@@ -137,6 +148,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         },
         body: JSON.stringify({
           messages: apiMessages,
+          model: selectedModel, // 선택된 모델 전송
         }),
         signal: controller.signal, // 요청 취소를 위한 signal 추가
       });

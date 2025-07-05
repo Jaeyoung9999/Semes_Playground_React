@@ -7,7 +7,7 @@ import { useChatStore } from '@stores/ChatStore';
 
 // 메인 채팅 앱 컴포넌트
 export default function ChatPage() {
-  const { clearMessages, messages } = useChatStore();
+  const { messages } = useChatStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -62,10 +62,7 @@ export default function ChatPage() {
         className={`flex-1 flex flex-col ${sidebarOpen ? 'ml-64' : 'ml-12'} transition-all duration-300 min-h-screen`}
       >
         {/* 헤더 */}
-        <Header
-          messagesCount={messages.length}
-          onClearMessages={clearMessages}
-        />
+        <Header />
 
         {/* 채팅 표시 영역 */}
         <main className="flex-1">

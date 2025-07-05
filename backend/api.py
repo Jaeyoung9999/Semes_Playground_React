@@ -27,11 +27,19 @@ if not openai_api_key:
 
 client = openai.Client(api_key=openai_api_key)
 
+# 허용되는 모델 목록
+ALLOWED_MODELS = ["gpt-3.5-turbo", "gpt-4o"]
+
 @app.post("/chat")
 async def chat(request: Request) -> StreamingResponse:
     # Parse the request body
     chat_request_data = await request.json()
     messages = chat_request_data.get("messages", [])
+    model = chat_request_data.get("model", "gpt-3.5-turbo")
+    
+    # 모델 유효성 검사
+    if model not in ALLOWED_MODELS:
+        model = "gpt-3.5-turbo"  # 기본값으로 설정
     
     async def stream_openai_response():
         try:
@@ -41,7 +49,7 @@ async def chat(request: Request) -> StreamingResponse:
             
             stream = client.chat.completions.create(
                 messages=messages,
-                model="gpt-3.5-turbo",
+                model=model,  # 선택된 모델 사용
                 stream=True,
             )
 
