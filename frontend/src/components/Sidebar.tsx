@@ -16,7 +16,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const {
     chatHistory,
     currentSessionId,
-    createNewSession,
+    startNewChat,
     loadSession,
     deleteSession,
     renameSession,
@@ -62,9 +62,9 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     }
   }, [editingSession]);
 
-  // 새 채팅 시작
+  // 새 채팅 시작 (메인 화면으로 돌아가기)
   const handleNewChat = () => {
-    createNewSession();
+    startNewChat();
   };
 
   // 채팅 세션 선택

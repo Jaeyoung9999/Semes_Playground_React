@@ -24,12 +24,13 @@ type ChatStore = {
   getApiMessages: () => Array<{ role: string; content: string }>;
   sendMessage: (message: string) => Promise<void>;
 
-  // 새로운 채팅 히스토리 메서드들
-  createNewSession: () => string;
+  // 수정된 채팅 히스토리 메서드들
+  startNewChat: () => void; // createNewSession 대신
+  createNewSession: () => string; // 내부적으로만 사용
   loadSession: (sessionId: string) => void;
   saveCurrentSession: () => void;
   deleteSession: (sessionId: string) => void;
-  renameSession: (sessionId: string, newTitle: string) => void; // 새로 추가
+  renameSession: (sessionId: string, newTitle: string) => void;
   generateSessionTitle: (sessionId: string) => Promise<void>;
   loadChatHistory: () => void;
   saveChatHistory: () => void;
@@ -127,7 +128,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     const trimmedMessage = message.trim();
     if (!trimmedMessage) return;
 
-    // 현재 세션이 없으면 새로운 세션 생성
+    // 현재 세션이 없으면 새로운 세션 생성 (실제로 여기서 생성)
     if (!get().currentSessionId) {
       get().createNewSession();
     }
@@ -228,7 +229,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  // 새로운 세션 생성
+  // 새 채팅 시작 (메인 화면으로 돌아가기 - 세션 생성 안함)
+  startNewChat: () => {
+    set({
+      currentSessionId: null,
+      messages: [],
+    });
+  },
+
+  // 새로운 세션 생성 (실제 세션 생성 - 내부적으로만 사용)
   createNewSession: () => {
     const sessionId = generateId();
     const newSession: ChatSession = {
@@ -291,7 +300,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
     set(() => ({
       chatHistory: updatedHistory,
-      // 현재 세션이 삭제되는 경우 초기화
+      // 현재 세션이 삭제되는 경우 새 채팅 상태로 전환
       ...(currentSessionId === sessionId && {
         currentSessionId: null,
         messages: [],
@@ -301,7 +310,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     get().saveChatHistory();
   },
 
-  // 세션 이름 변경 (새로 추가)
+  // 세션 이름 변경
   renameSession: (sessionId: string, newTitle: string) => {
     const { chatHistory } = get();
     const trimmedTitle = newTitle.trim();
@@ -374,7 +383,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         const parsedHistory: ChatHistory = JSON.parse(savedHistory);
         set({
           chatHistory: parsedHistory.sessions || [],
-          currentSessionId: parsedHistory.currentSessionId,
+          // 저장된 currentSessionId는 무시하고 새 채팅 상태로 시작
+          currentSessionId: null,
+          messages: [],
         });
       }
     } catch (error) {
