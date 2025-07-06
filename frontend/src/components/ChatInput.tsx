@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useChatStore } from '@stores/ChatStore';
+import ArrowUpIcon from '@icons/arrow_up.svg?react';
 
 // 채팅 입력 컴포넌트
 export default function ChatInput() {
@@ -120,7 +121,7 @@ export default function ChatInput() {
                 <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
                 <span className="text-sm transform group-hover:scale-110 transition-transform">
-                  ↵
+                  <ArrowUpIcon />
                 </span>
               )}
             </button>
