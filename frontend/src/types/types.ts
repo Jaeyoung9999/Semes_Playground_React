@@ -21,3 +21,17 @@ export type ChatHistory = {
   sessions: ChatSession[];
   currentSessionId: string | null;
 };
+
+// 모델 파라미터 타입
+export type ModelParameters = {
+  temperature: number;
+  topP: number;
+  frequencyPenalty: number;
+  presencePenalty: number;
+};
+
+// 세션별 상태를 포함한 확장된 ChatSession 타입
+export type ExtendedChatSession = ChatSession & {
+  abortController?: AbortController;
+  isLoading?: boolean;
+};
