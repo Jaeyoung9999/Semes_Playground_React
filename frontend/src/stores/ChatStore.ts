@@ -9,6 +9,9 @@ type ChatStore = {
   abortController: AbortController | null;
   selectedModel: string;
 
+  // 입력값 제어 상태 추가
+  inputValue: string;
+
   // 채팅 히스토리 상태
   currentSessionId: string | null;
   chatHistory: ChatSession[];
@@ -24,9 +27,12 @@ type ChatStore = {
   getApiMessages: () => Array<{ role: string; content: string }>;
   sendMessage: (message: string) => Promise<void>;
 
+  // 입력값 제어 메서드 추가
+  setInputValue: (value: string) => void;
+
   // 수정된 채팅 히스토리 메서드들
-  startNewChat: () => void; // createNewSession 대신
-  createNewSession: () => string; // 내부적으로만 사용
+  startNewChat: () => void;
+  createNewSession: () => string;
   loadSession: (sessionId: string) => void;
   saveCurrentSession: () => void;
   deleteSession: (sessionId: string) => void;
@@ -50,6 +56,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   isLoading: false,
   abortController: null,
   selectedModel: 'gpt-3.5-turbo',
+
+  // 입력값 상태 초기값 추가
+  inputValue: '',
 
   // 채팅 히스토리 상태 초기값
   currentSessionId: null,
@@ -116,6 +125,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   setSelectedModel: (model) => set({ selectedModel: model }),
 
   clearMessages: () => set({ messages: [] }),
+
+  // 입력값 제어 메서드 추가
+  setInputValue: (value) => set({ inputValue: value }),
 
   getApiMessages: () => {
     const { messages } = get();
@@ -234,6 +246,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     set({
       currentSessionId: null,
       messages: [],
+      inputValue: '', // 입력값도 초기화
     });
   },
 
@@ -267,6 +280,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       set({
         currentSessionId: sessionId,
         messages: session.messages,
+        inputValue: '', // 세션 로드 시 입력값 초기화
       });
     }
   },
@@ -304,6 +318,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       ...(currentSessionId === sessionId && {
         currentSessionId: null,
         messages: [],
+        inputValue: '', // 입력값도 초기화
       }),
     }));
 
@@ -386,6 +401,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           // 저장된 currentSessionId는 무시하고 새 채팅 상태로 시작
           currentSessionId: null,
           messages: [],
+          inputValue: '', // 입력값도 초기화
         });
       }
     } catch (error) {

@@ -1,15 +1,23 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useChatStore } from '@stores/ChatStore';
 
 // 채팅 입력 컴포넌트
 export default function ChatInput() {
-  const [inputValue, setInputValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Zustand 스토어에서 필요한 함수들 가져오기
-  const { sendMessage, isLoading, stopStreaming } = useChatStore();
+  const { inputValue, setInputValue, sendMessage, isLoading, stopStreaming } =
+    useChatStore();
+
+  // inputValue가 변경될 때마다 textarea 높이 조절
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+    }
+  }, [inputValue]);
 
   // 메시지 전송 핸들러
   const handleSendMessage = async () => {

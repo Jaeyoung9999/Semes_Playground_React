@@ -29,7 +29,6 @@
       "@components/*": ["src/components/*"],
       "@pages/*": ["src/pages/*"],
       "@utils/*": ["src/utils/*"],
-      "@hooks/*": ["src/hooks/*"],
       "@stores/*": ["src/stores/*"],
       "@types/*": ["src/types/*"],
       "@icons/*": ["src/assets/icons/*"]
