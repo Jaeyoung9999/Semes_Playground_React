@@ -5,19 +5,6 @@ import { useChatStore } from '@stores/ChatStore';
 export default function ChatDisplay() {
   const { messages, isLoading } = useChatStore();
 
-  // 메시지가 없을 때 표시할 초기 화면
-  if (messages.length === 0) {
-    return (
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="text-center text-gray-500">
-          <div className="text-6xl mb-4">💬</div>
-          <h2 className="text-2xl font-semibold mb-2">채팅을 시작해보세요</h2>
-          <p>아래 입력창에 메시지를 입력하여 AI와 대화할 수 있습니다.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-4 space-y-4">
       {/* 채팅 메시지 목록 */}

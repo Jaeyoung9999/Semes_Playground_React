@@ -3,6 +3,7 @@ import ChatDisplay from '@components/ChatDisplay';
 import ChatInput from '@components/ChatInput';
 import Header from '@components/Header';
 import Sidebar from '@components/Sidebar';
+import WelcomeScreen from '@components/WelcomeScreen';
 import ArrowDownIcon from '@icons/arrow_down.svg?react';
 import { useChatStore } from '@stores/ChatStore';
 
@@ -68,7 +69,8 @@ export default function ChatPage() {
         {/* 채팅 표시 영역 */}
         <main className="flex-1">
           <div className="w-[60%] mx-auto max-w-4xl">
-            <ChatDisplay />
+            {/* 메시지가 없을 때 환영 화면 표시 */}
+            {messages.length === 0 ? <WelcomeScreen /> : <ChatDisplay />}
           </div>
         </main>
 
@@ -76,7 +78,7 @@ export default function ChatPage() {
         <footer className="sticky bottom-0 bg-white z-20">
           <div className="w-[60%] mx-auto max-w-4xl relative">
             {/* 자동 스크롤이 비활성화되었을 때 표시할 버튼 */}
-            {!shouldAutoScroll && (
+            {!shouldAutoScroll && messages.length > 0 && (
               <div className="absolute -top-16 left-1/2 transform -translate-x-1/2">
                 <button
                   onClick={scrollToBottom}
