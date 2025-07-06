@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 import type { ChatMessage, ChatSession, ChatHistory } from '@/types/types';
 
+// 모델 파라미터 타입 수정 (maxTokens 제거)
+export type ModelParameters = {
+  temperature: number;
+  topP: number;
+  frequencyPenalty: number;
+  presencePenalty: number;
+};
+
 // 채팅 스토어 상태 타입
 type ChatStore = {
   // 현재 채팅 상태
@@ -9,12 +17,17 @@ type ChatStore = {
   abortController: AbortController | null;
   selectedModel: string;
 
-  // 입력값 제어 상태 추가
+  // 입력값 제어 상태
   inputValue: string;
 
   // 채팅 히스토리 상태
   currentSessionId: string | null;
   chatHistory: ChatSession[];
+
+  // 설정 관련 상태 추가
+  systemPrompt: string;
+  modelParameters: ModelParameters;
+  isSettingsOpen: boolean;
 
   // 기존 메서드들
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
@@ -27,10 +40,10 @@ type ChatStore = {
   getApiMessages: () => Array<{ role: string; content: string }>;
   sendMessage: (message: string) => Promise<void>;
 
-  // 입력값 제어 메서드 추가
+  // 입력값 제어 메서드
   setInputValue: (value: string) => void;
 
-  // 수정된 채팅 히스토리 메서드들
+  // 채팅 히스토리 메서드들
   startNewChat: () => void;
   createNewSession: () => string;
   loadSession: (sessionId: string) => void;
@@ -40,6 +53,14 @@ type ChatStore = {
   generateSessionTitle: (sessionId: string) => Promise<void>;
   loadChatHistory: () => void;
   saveChatHistory: () => void;
+
+  // 설정 관련 메서드 추가
+  setSystemPrompt: (prompt: string) => void;
+  setModelParameters: (params: Partial<ModelParameters>) => void;
+  setIsSettingsOpen: (open: boolean) => void;
+  resetSettings: () => void;
+  loadSettings: () => void;
+  saveSettings: () => void;
 };
 
 // 고유 ID 생성 함수
@@ -48,6 +69,18 @@ const generateId = () =>
 
 // 로컬 스토리지 키
 const CHAT_HISTORY_KEY = 'chat_history';
+const SETTINGS_KEY = 'chat_settings';
+
+// 기본 설정값
+const DEFAULT_SYSTEM_PROMPT =
+  '당신은 도움이 되는 AI 어시스턴트입니다. 사용자의 질문에 친절하고 정확하게 한국어로 답변해주세요. 자연스럽고 이해하기 쉬운 한국어를 사용하며, 필요한 경우 예시나 설명을 추가해주세요.';
+
+const DEFAULT_MODEL_PARAMETERS: ModelParameters = {
+  temperature: 0.7,
+  topP: 1.0,
+  frequencyPenalty: 0,
+  presencePenalty: 0,
+};
 
 // Zustand 스토어 생성
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -57,12 +90,17 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   abortController: null,
   selectedModel: 'gpt-3.5-turbo',
 
-  // 입력값 상태 초기값 추가
+  // 입력값 상태 초기값
   inputValue: '',
 
   // 채팅 히스토리 상태 초기값
   currentSessionId: null,
   chatHistory: [],
+
+  // 설정 관련 상태 초기값
+  systemPrompt: DEFAULT_SYSTEM_PROMPT,
+  modelParameters: DEFAULT_MODEL_PARAMETERS,
+  isSettingsOpen: false,
 
   // 기존 메서드들
   addMessage: (message) => {
@@ -76,7 +114,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       messages: [...state.messages, newMessage],
     }));
 
-    // 메시지가 추가될 때마다 현재 세션 저장
     setTimeout(() => get().saveCurrentSession(), 0);
   },
 
@@ -96,7 +133,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       abortController: null,
     }));
 
-    // 스트리밍 완료 후 세션 저장 및 제목 생성
     setTimeout(() => {
       const { saveCurrentSession, currentSessionId, generateSessionTitle } =
         get();
@@ -126,7 +162,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   clearMessages: () => set({ messages: [] }),
 
-  // 입력값 제어 메서드 추가
   setInputValue: (value) => set({ inputValue: value }),
 
   getApiMessages: () => {
@@ -140,7 +175,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     const trimmedMessage = message.trim();
     if (!trimmedMessage) return;
 
-    // 현재 세션이 없으면 새로운 세션 생성 (실제로 여기서 생성)
     if (!get().currentSessionId) {
       get().createNewSession();
     }
@@ -156,9 +190,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       });
 
       const apiMessages = get().getApiMessages();
-      apiMessages.push({ role: 'user', content: trimmedMessage });
 
-      const { selectedModel } = get();
+      // 시스템 프롬프트 추가
+      const { systemPrompt, selectedModel, modelParameters } = get();
+      const messagesWithSystem = [
+        { role: 'system', content: systemPrompt },
+        ...apiMessages,
+        { role: 'user', content: trimmedMessage },
+      ];
 
       get().addMessage({
         role: 'assistant',
@@ -172,8 +211,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: apiMessages,
+          messages: messagesWithSystem,
           model: selectedModel,
+          ...modelParameters,
         }),
         signal: controller.signal,
       });
@@ -241,16 +281,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  // 새 채팅 시작 (메인 화면으로 돌아가기 - 세션 생성 안함)
   startNewChat: () => {
     set({
       currentSessionId: null,
       messages: [],
-      inputValue: '', // 입력값도 초기화
+      inputValue: '',
     });
   },
 
-  // 새로운 세션 생성 (실제 세션 생성 - 내부적으로만 사용)
   createNewSession: () => {
     const sessionId = generateId();
     const newSession: ChatSession = {
@@ -271,7 +309,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     return sessionId;
   },
 
-  // 세션 로드
   loadSession: (sessionId: string) => {
     const { chatHistory } = get();
     const session = chatHistory.find((s) => s.id === sessionId);
@@ -280,12 +317,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       set({
         currentSessionId: sessionId,
         messages: session.messages,
-        inputValue: '', // 세션 로드 시 입력값 초기화
+        inputValue: '',
       });
     }
   },
 
-  // 현재 세션 저장
   saveCurrentSession: () => {
     const { currentSessionId, messages, chatHistory } = get();
     if (!currentSessionId) return;
@@ -305,7 +341,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     get().saveChatHistory();
   },
 
-  // 세션 삭제
   deleteSession: (sessionId: string) => {
     const { chatHistory, currentSessionId } = get();
     const updatedHistory = chatHistory.filter(
@@ -314,18 +349,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
     set(() => ({
       chatHistory: updatedHistory,
-      // 현재 세션이 삭제되는 경우 새 채팅 상태로 전환
       ...(currentSessionId === sessionId && {
         currentSessionId: null,
         messages: [],
-        inputValue: '', // 입력값도 초기화
+        inputValue: '',
       }),
     }));
 
     get().saveChatHistory();
   },
 
-  // 세션 이름 변경
   renameSession: (sessionId: string, newTitle: string) => {
     const { chatHistory } = get();
     const trimmedTitle = newTitle.trim();
@@ -347,7 +380,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     get().saveChatHistory();
   },
 
-  // 세션 제목 생성
   generateSessionTitle: async (sessionId: string) => {
     const { chatHistory } = get();
     const session = chatHistory.find((s) => s.id === sessionId);
@@ -390,7 +422,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  // 채팅 히스토리 로드
   loadChatHistory: () => {
     try {
       const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
@@ -398,10 +429,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         const parsedHistory: ChatHistory = JSON.parse(savedHistory);
         set({
           chatHistory: parsedHistory.sessions || [],
-          // 저장된 currentSessionId는 무시하고 새 채팅 상태로 시작
           currentSessionId: null,
           messages: [],
-          inputValue: '', // 입력값도 초기화
+          inputValue: '',
         });
       }
     } catch (error) {
@@ -409,7 +439,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  // 채팅 히스토리 저장
   saveChatHistory: () => {
     try {
       const { chatHistory, currentSessionId } = get();
@@ -420,6 +449,61 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(historyToSave));
     } catch (error) {
       console.error('채팅 히스토리 저장 오류:', error);
+    }
+  },
+
+  // 설정 관련 메서드 구현
+  setSystemPrompt: (prompt: string) => {
+    set({ systemPrompt: prompt });
+    get().saveSettings();
+  },
+
+  setModelParameters: (params: Partial<ModelParameters>) => {
+    set((state) => ({
+      modelParameters: { ...state.modelParameters, ...params },
+    }));
+    get().saveSettings();
+  },
+
+  setIsSettingsOpen: (open: boolean) => {
+    set({ isSettingsOpen: open });
+  },
+
+  resetSettings: () => {
+    set({
+      systemPrompt: DEFAULT_SYSTEM_PROMPT,
+      modelParameters: DEFAULT_MODEL_PARAMETERS,
+    });
+    get().saveSettings();
+  },
+
+  loadSettings: () => {
+    try {
+      const savedSettings = localStorage.getItem(SETTINGS_KEY);
+      if (savedSettings) {
+        const { systemPrompt, modelParameters } = JSON.parse(savedSettings);
+        set({
+          systemPrompt: systemPrompt || DEFAULT_SYSTEM_PROMPT,
+          modelParameters: { ...DEFAULT_MODEL_PARAMETERS, ...modelParameters },
+        });
+      }
+    } catch (error) {
+      console.error('설정 로드 오류:', error);
+    }
+  },
+
+  saveSettings: () => {
+    try {
+      const { systemPrompt, modelParameters } = get();
+      localStorage.setItem(
+        SETTINGS_KEY,
+        JSON.stringify({
+          systemPrompt,
+          modelParameters,
+        }),
+      );
+    } catch (error) {
+      console.error('설정 저장 오류:', error);
     }
   },
 }));
