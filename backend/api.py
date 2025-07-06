@@ -43,9 +43,12 @@ async def chat(request: Request) -> StreamingResponse:
     
     async def stream_openai_response():
         try:
-            # Add system message if not present
+            # Add system message if not present (한글 시스템 메시지)
             if not any(msg["role"] == "system" for msg in messages):
-                messages.insert(0, {"role": "system", "content": "You are a helpful assistant."})
+                messages.insert(0, {
+                    "role": "system", 
+                    "content": "당신은 도움이 되는 AI 어시스턴트입니다. 사용자의 질문에 친절하고 정확하게 한국어로 답변해주세요. 자연스럽고 이해하기 쉬운 한국어를 사용하며, 필요한 경우 예시나 설명을 추가해주세요."
+                })
             
             stream = client.chat.completions.create(
                 messages=messages,
@@ -91,8 +94,14 @@ async def generate_title(request: Request):
     
     try:
         messages = [
-            {"role": "system", "content": "You are a helpful assistant that creates concise, descriptive titles."},
-            {"role": "user", "content": f"Create a short, descriptive title (maximum 5 words) for a conversation that starts with this user message: '{user_message}' and your first response begins with: '{ai_response[:100]}...'"}
+            {
+                "role": "system", 
+                "content": "당신은 대화의 제목을 만들어주는 도우미입니다. 간결하고 내용을 잘 표현하는 한국어 제목을 만들어주세요."
+            },
+            {
+                "role": "user", 
+                "content": f"다음 대화를 요약하여 5단어 이내의 간단한 한국어 제목을 만들어주세요.\n\n사용자 메시지: '{user_message}'\nAI 응답 시작 부분: '{ai_response[:100]}...'\n\n제목만 답변해주세요."
+            }
         ]
         
         response = client.chat.completions.create(
