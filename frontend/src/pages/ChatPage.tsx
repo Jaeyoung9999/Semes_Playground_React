@@ -9,7 +9,7 @@ import { useChatStore } from '@stores/ChatStore';
 
 // 메인 채팅 앱 컴포넌트
 export default function ChatPage() {
-  const { messages } = useChatStore();
+  const { messages, currentSessionId } = useChatStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -31,6 +31,15 @@ export default function ChatPage() {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  // 채팅 세션이 변경될 때마다 스크롤을 맨 아래로 이동
+  useEffect(() => {
+    setShouldAutoScroll(true);
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'instant', // 세션 변경 시에는 즉시 이동
+      block: 'end',
+    });
+  }, [currentSessionId]);
 
   // 새 메시지가 추가될 때마다 조건부 스크롤
   useEffect(() => {
