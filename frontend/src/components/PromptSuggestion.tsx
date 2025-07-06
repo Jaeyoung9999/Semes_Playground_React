@@ -1,5 +1,6 @@
 import { useChatStore } from '@stores/ChatStore';
 import { suggestedPrompts } from '@utils/prompt';
+import SuggestIcon from '@icons/suggestion.svg?react';
 
 // 메인 화면 컴포넌트
 export default function PromptSuggestion() {
@@ -23,20 +24,7 @@ export default function PromptSuggestion() {
         <div className="mx-5">
           {/* 제안 헤더 */}
           <div className="mb-3 flex gap-1 text-xs font-medium items-center text-gray-600">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="w-3 h-3"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"
-              />
-            </svg>
+            <SuggestIcon />
             제안
           </div>
 
