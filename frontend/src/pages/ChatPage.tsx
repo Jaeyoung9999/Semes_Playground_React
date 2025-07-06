@@ -3,6 +3,7 @@ import ChatDisplay from '@components/ChatDisplay';
 import ChatInput from '@components/ChatInput';
 import Header from '@components/Header';
 import Sidebar from '@components/Sidebar';
+import ArrowDownIcon from '@icons/arrow_down.svg?react';
 import { useChatStore } from '@stores/ChatStore';
 
 // 메인 채팅 앱 컴포넌트
@@ -82,16 +83,7 @@ export default function ChatPage() {
                   className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-4 py-2 shadow-lg transition-colors flex items-center gap-2"
                   title="최신 메시지로 이동"
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                  </svg>
+                  <ArrowDownIcon />
                   <span className="text-sm font-medium">최신 메시지</span>
                 </button>
               </div>

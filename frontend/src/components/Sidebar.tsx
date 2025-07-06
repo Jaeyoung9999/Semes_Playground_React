@@ -1,5 +1,11 @@
 import { useChatStore } from '@stores/ChatStore';
 import { useEffect, useState, useRef } from 'react';
+import CloseSidebarIcon from '@icons/close_sidebar.svg?react';
+import OpenSidebarIcon from '@icons/open_sidebar.svg?react';
+import PlusIcon from '@icons/plus.svg?react';
+import OptionsIcon from '@icons/options.svg?react';
+import ModifyIcon from '@icons/modify.svg?react';
+import DeleteIcon from '@icons/delete.svg?react';
 
 type SidebarProps = {
   isOpen: boolean;
@@ -157,16 +163,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
               className="p-1 hover:bg-gray-700 rounded-md transition-colors"
               title="사이드바 닫기"
             >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M11 19l-7-7 7-7" />
-              </svg>
+              <CloseSidebarIcon />
             </button>
           </div>
 
@@ -176,17 +173,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
               onClick={handleNewChat}
               className="w-full py-2 px-3 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors text-sm font-medium flex items-center justify-center gap-2"
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              새 채팅
+              <PlusIcon />새 채팅
             </button>
           </div>
 
@@ -240,18 +227,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                             title="메뉴"
                             data-dropdown-button
                           >
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <circle cx="12" cy="12" r="1" />
-                              <circle cx="12" cy="5" r="1" />
-                              <circle cx="12" cy="19" r="1" />
-                            </svg>
+                            <OptionsIcon />
                           </button>
 
                           {/* 드롭다운 메뉴 */}
@@ -267,17 +243,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                                 }}
                                 className="w-full px-3 py-2 text-left text-sm text-white hover:bg-gray-700 flex items-center gap-2"
                               >
-                                <svg
-                                  width="14"
-                                  height="14"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                >
-                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                  <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                </svg>
+                                <ModifyIcon />
                                 이름 변경
                               </button>
                               <button
@@ -287,18 +253,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                                 }}
                                 className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-gray-700 flex items-center gap-2"
                               >
-                                <svg
-                                  width="14"
-                                  height="14"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                >
-                                  <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                  <line x1="10" y1="11" x2="10" y2="17" />
-                                  <line x1="14" y1="11" x2="14" y2="17" />
-                                </svg>
+                                <DeleteIcon />
                                 삭제
                               </button>
                             </div>
@@ -318,37 +273,19 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
           {/* 사이드바 열기 버튼 */}
           <button
             onClick={onToggle}
-            className="p-2 hover:bg-gray-700 rounded-md transition-colors"
+            className="p-1 hover:bg-gray-700 rounded-md transition-colors"
             title="사이드바 열기"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M13 5l7 7-7 7" />
-            </svg>
+            <OpenSidebarIcon />
           </button>
 
           {/* 새 채팅 버튼 (작은 버전) */}
           <button
             onClick={handleNewChat}
-            className="p-2 hover:bg-gray-700 rounded-md transition-colors"
+            className="p-1 hover:bg-gray-700 rounded-md transition-colors"
             title="새 채팅"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M12 5v14M5 12h14" />
-            </svg>
+            <PlusIcon />
           </button>
         </div>
       )}
