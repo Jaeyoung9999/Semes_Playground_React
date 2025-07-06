@@ -3,7 +3,7 @@ import ChatDisplay from '@components/ChatDisplay';
 import ChatInput from '@components/ChatInput';
 import Header from '@components/Header';
 import Sidebar from '@components/Sidebar';
-import WelcomeScreen from '@components/WelcomeScreen';
+import PromptSuggestion from '@/components/PromptSuggestion';
 import ArrowDownIcon from '@icons/arrow_down.svg?react';
 import { useChatStore } from '@stores/ChatStore';
 
@@ -66,37 +66,52 @@ export default function ChatPage() {
         {/* 헤더 */}
         <Header />
 
-        {/* 채팅 표시 영역 */}
-        <main className="flex-1">
-          <div className="w-[60%] mx-auto max-w-4xl">
-            {/* 메시지가 없을 때 환영 화면 표시 */}
-            {messages.length === 0 ? <WelcomeScreen /> : <ChatDisplay />}
-          </div>
-        </main>
-
-        {/* 메시지 입력 영역 */}
-        <footer className="sticky bottom-0 bg-white z-20">
-          <div className="w-[60%] mx-auto max-w-4xl relative">
-            {/* 자동 스크롤이 비활성화되었을 때 표시할 버튼 */}
-            {!shouldAutoScroll && messages.length > 0 && (
-              <div className="absolute -top-16 left-1/2 transform -translate-x-1/2">
-                <button
-                  onClick={scrollToBottom}
-                  className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-4 py-2 shadow-lg transition-colors flex items-center gap-2"
-                  title="최신 메시지로 이동"
-                >
-                  <ArrowDownIcon />
-                  <span className="text-sm font-medium">최신 메시지</span>
-                </button>
+        {/* 메시지가 없을 때의 레이아웃 */}
+        {messages.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-[60%] mx-auto max-w-4xl">
+              {/* 메시지 입력 영역과 웰컴 스크린을 묶은 컨테이너 */}
+              <div className="space-y-0">
+                <ChatInput />
+                <PromptSuggestion />
               </div>
-            )}
-
-            <ChatInput />
+            </div>
           </div>
-        </footer>
+        ) : (
+          /* 메시지가 있을 때의 레이아웃 */
+          <>
+            {/* 채팅 표시 영역 */}
+            <main className="flex-1">
+              <div className="w-[60%] mx-auto max-w-4xl">
+                <ChatDisplay />
+              </div>
+            </main>
 
-        {/* 스크롤을 맨 아래로 이동시키기 위한 참조 요소 */}
-        <div ref={messagesEndRef} />
+            {/* 메시지 입력 영역 - 채팅용 */}
+            <footer className="sticky bottom-0 bg-white z-20">
+              <div className="w-[60%] mx-auto max-w-4xl relative">
+                {/* 자동 스크롤이 비활성화되었을 때 표시할 버튼 */}
+                {!shouldAutoScroll && (
+                  <div className="absolute -top-16 left-1/2 transform -translate-x-1/2">
+                    <button
+                      onClick={scrollToBottom}
+                      className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-4 py-2 shadow-lg transition-colors flex items-center gap-2"
+                      title="최신 메시지로 이동"
+                    >
+                      <ArrowDownIcon />
+                      <span className="text-sm font-medium">최신 메시지</span>
+                    </button>
+                  </div>
+                )}
+
+                <ChatInput />
+              </div>
+            </footer>
+
+            {/* 스크롤을 맨 아래로 이동시키기 위한 참조 요소 */}
+            <div ref={messagesEndRef} />
+          </>
+        )}
       </div>
     </div>
   );

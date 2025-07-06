@@ -2,7 +2,7 @@ import { useChatStore } from '@stores/ChatStore';
 import { suggestedPrompts } from '@utils/prompt';
 
 // 메인 화면 컴포넌트
-export default function WelcomeScreen() {
+export default function PromptSuggestion() {
   const { setInputValue } = useChatStore();
 
   // 프롬프트 클릭 핸들러
@@ -18,7 +18,7 @@ export default function WelcomeScreen() {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center p-8">
+    <div className="flex-1 flex items-center justify-center p-4">
       <div className="mx-auto max-w-2xl w-full">
         <div className="mx-5">
           {/* 제안 헤더 */}
