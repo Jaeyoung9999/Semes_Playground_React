@@ -1,65 +1,33 @@
-// 프롬프트 카테고리 타입 정의
-export type PromptCategory = {
+// 프롬프트 아이템 타입 정의
+export type PromptItem = {
   title: string;
-  prompts: string[];
+  subtitle: string;
 };
 
-// 추천 프롬프트 데이터
-export const promptCategories: PromptCategory[] = [
+// 추천 프롬프트 데이터 (클로드 스타일)
+export const suggestedPrompts: PromptItem[] = [
   {
-    title: '💡 창의적 아이디어',
-    prompts: [
-      '새로운 스타트업 아이디어를 10개 제안해주세요',
-      '독창적인 블로그 포스트 주제를 추천해주세요',
-      '창의적인 프로젝트 이름을 지어주세요',
-    ],
+    title: 'JavaScript 기초 개념을',
+    subtitle: '쉽게 설명해주세요',
   },
   {
-    title: '💼 업무 도우미',
-    prompts: [
-      '효과적인 이메일 작성법을 알려주세요',
-      '프레젠테이션 구성 방법을 설명해주세요',
-      '업무 효율성을 높이는 방법을 제안해주세요',
-    ],
+    title: '효율적인 업무 관리',
+    subtitle: '방법을 알려주세요',
   },
   {
-    title: '📚 학습 도우미',
-    prompts: [
-      'JavaScript의 기본 개념을 쉽게 설명해주세요',
-      '효과적인 공부 방법을 알려주세요',
-      'React와 Vue의 차이점을 비교해주세요',
-    ],
+    title: '창의적인 아이디어를',
+    subtitle: '브레인스토밍해주세요',
   },
   {
-    title: '🎨 콘텐츠 제작',
-    prompts: [
-      '매력적인 소셜미디어 캡션을 작성해주세요',
-      '블로그 글의 SEO 최적화 방법을 알려주세요',
-      '유튜브 영상 기획안을 만들어주세요',
-    ],
+    title: 'React와 Vue의',
+    subtitle: '차이점을 비교해주세요',
   },
   {
-    title: '🔍 분석 및 리서치',
-    prompts: [
-      '최신 기술 트렌드를 분석해주세요',
-      '경쟁사 분석 방법을 알려주세요',
-      '시장 조사 계획을 세워주세요',
-    ],
+    title: '코드 리뷰 시',
+    subtitle: '체크해야 할 포인트를 알려주세요',
   },
   {
-    title: '🛠️ 문제 해결',
-    prompts: [
-      '코딩 에러를 디버깅하는 방법을 알려주세요',
-      '프로젝트 관리 문제 해결법을 제안해주세요',
-      '시스템 최적화 방안을 알려주세요',
-    ],
+    title: '프레젠테이션을',
+    subtitle: '효과적으로 구성하는 방법',
   },
-];
-
-// 빠른 시작 프롬프트 (상단에 표시될 인기 프롬프트)
-export const quickStartPrompts: string[] = [
-  '오늘 하루를 효율적으로 계획하는 방법을 알려주세요',
-  '새로운 기술을 빠르게 학습하는 전략을 제안해주세요',
-  '팀 협업을 개선하는 방법을 알려주세요',
-  '창의적인 문제 해결 기법을 설명해주세요',
 ];
